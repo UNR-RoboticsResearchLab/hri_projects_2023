@@ -38,7 +38,7 @@
 
 import rospy
 from std_msgs.msg import String
-# from week0.msg import Person
+from week0.msg import Person
 
 def callback(data):
     rospy.loginfo(rospy.get_caller_id() + 'I heard %s', data.data)
@@ -52,7 +52,7 @@ def listener():
     # run simultaneously.
     rospy.init_node('listener', anonymous=True)
 
-    rospy.Subscriber('chatter', String, callback)
+    rospy.Subscriber('chatter', Person, callback)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
