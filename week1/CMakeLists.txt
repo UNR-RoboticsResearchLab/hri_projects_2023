@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   stage_ros
   std_msgs
-  week0
   week1
 )
 
