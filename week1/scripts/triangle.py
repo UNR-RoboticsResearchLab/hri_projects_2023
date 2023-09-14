@@ -5,10 +5,10 @@ from geometry_msgs.msg import Twist, TwistWithCovariance, Vector3, Pose, PoseWit
 from nav_msgs.msg import Odometry
 import numpy as np
 
-def square():
+def triangle():
     pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
     # pub = rospy.Publisher('odom', Odometry, queue_size=10)
-    rospy.init_node('square', anonymous=True)
+    rospy.init_node('triangle', anonymous=True)
     rate = rospy.Rate(10) # 10hz
     
     while not rospy.is_shutdown():
@@ -19,8 +19,8 @@ def square():
             rospy.loginfo(twist)
             pub.publish(twist)
             rate.sleep()
-        for i in range(10):
-            twist.angular.z=np.pi/2
+        for i in range(20):
+            twist.angular.z=np.pi/3
             twist.linear.x=0
             rospy.loginfo(twist)
             pub.publish(twist)
@@ -29,6 +29,6 @@ def square():
 # if __name__ == '__main__':
 if __name__ == '__main__':
     try:
-        square()
+        triangle()
     except rospy.ROSInterruptException:
         pass
