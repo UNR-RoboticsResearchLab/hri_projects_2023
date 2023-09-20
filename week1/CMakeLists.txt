@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(week2)
+project(week1)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -9,11 +9,9 @@ project(week2)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
-  roscpp
   rospy
-  sensor_msgs
-  sensor_msgs
-  tf2_ros
+  stage_ros
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -73,7 +71,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   geometry_msgs#   sensor_msgs#   sensor_msgs
+#   geometry_msgs#   std_msgs
 # )
 
 ################################################
@@ -107,8 +105,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES week2
-#  CATKIN_DEPENDS geometry_msgs roscpp rospy sensor_msgs sensor_msgs
+#  LIBRARIES week1
+ CATKIN_DEPENDS geometry_msgs rospy stage_ros std_msgs
 #  DEPENDS system_lib
 )
 
@@ -125,7 +123,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/week2.cpp
+#   src/${PROJECT_NAME}/week1.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -136,7 +134,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/week2_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/week1_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -188,19 +186,33 @@ include_directories(
 #   PATTERN ".svn" EXCLUDE
 # )
 
+
+ install(DIRECTORY launch/
+   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+   FILES_MATCHING PATTERN "*"
+   PATTERN ".git" EXCLUDE
+ )
+
+ install(DIRECTORY world/
+   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/world
+   FILES_MATCHING PATTERN "*"
+   PATTERN ".git" EXCLUDE
+ )
+
+
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+ install(FILES
+   # myfile1
+   # myfile2
+   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+ )
 
 #############
 ## Testing ##
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_week2.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_week1.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
