@@ -42,7 +42,7 @@ sudo apt install ros-noetic-rviz
 and run it with:
 
 ```
-rosrun rviz rviz -d ~/hri2023/src/hri_projects_2023/week2/people.rviz
+rosrun rviz rviz -d ~/hri2023/src/hri_projects_2023/week2/person.rviz
 ```
 
 This config file includes a number of visualizers for the robot's laser, the robot's odometry, pose, and the detected legs. Play around with it a bit to see how it works.
