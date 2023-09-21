@@ -1,0 +1,67 @@
+
+include "person.inc"
+include "map.inc"
+
+# time to pause (in GUI mode) or quit (in headless mode (-g)) the simulation
+quit_time 3600 # 1 hour of simulated time
+
+paused 0
+
+resolution 0.02
+
+# configure the GUI window
+window
+(
+  size [ 1019 1059 ] # in pixels
+  scale 33.632   # pixels per meter
+  center [ 2.690  3.288 ]
+  rotate [ 0.000  0.000 ]
+        
+  show_data 1              # 1=on 0=off
+)
+
+# load an environment bitmap
+floorplan
+( 
+  name "room"
+  bitmap "basic_map.pgm"
+  size [35.000 35.000 0.500]
+   pose [ 0.000 0.000 0.000 90.000 ]
+)
+
+
+define topurg ranger
+(
+  sensor(       
+    range [ 0.0  30.0 ]
+    fov 270.25
+   samples 1081
+  )
+
+  # generic model properties
+  #color "green"
+  color_rgba [0 1 0 0.5]
+  size [ 0.150 0.150 0.100 ]
+)
+
+
+
+define erratic position
+(
+  #size [0.415 0.392 0.25]
+  size [0.350 0.350 0.250]
+  origin [-0.050 0.000 0.000 0.000]
+  gui_nose 1
+  drive "diff"
+  topurg(pose [ 0.050 0.000 0.100 0.000 ])
+)
+
+# throw in a robot
+erratic( pose [ -6.819 5.013 0.000 149.450 ] name "pioneer" )
+#block( pose [ -3.02 -8.88 0.000 180.000 ] color "green")
+
+
+
+person ( name "r0" pose [ -8.770 9.909 0.000 88.935 ] localization "gps" localization_origin [ 0 0 0 0 ] )
+person ( name "r1" pose [ -7.088 11.276 0.000 -2.738 ] localization "gps" localization_origin [ 0 0 0 0 ] )
+person ( name "r2" pose [ -5.421 9.909 0.000 -88.682 ] localization "gps" localization_origin [ 0 0 0 0 ] )
