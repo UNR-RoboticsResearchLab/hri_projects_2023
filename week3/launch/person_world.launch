@@ -1,0 +1,9 @@
+<launch>
+
+	<!-- this is needed to let ROS know that it should use the simulator to tell the time, rather than the wall clock -->
+	<param name="use_sim_time" type="str" value="true"/>
+
+	<!-- this loads a ROS node -->
+	<node pkg="stage_ros" type="stageros" name="stage" args="$(find week3)/world/4person.world"/>
+
+</launch>
