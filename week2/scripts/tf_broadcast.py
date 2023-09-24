@@ -11,14 +11,23 @@ from sensor_msgs.msg import LaserScan
 import math
 from people_msgs.msg import PositionMeasurementArray
 from math import atan2
+from nav_msgs.msg import Odometry
 
-msg=Twist()
+msg_twist=Twist()
 case=''
 linearx=0
 angularz=0
 
 goal=Point()
 theta=0
+
+def new_odom(dat):
+    global x
+    global y
+    global theta
+
+    x = dat.pose.pose.position.x
+    y = dat.pose.pose.position.y
 
 
 def handle_leggies(msg):
@@ -48,34 +57,20 @@ def handle_leggies(msg):
     print(f"leggies found{t.transform.translation}")
     
     goal.x = t.transform.rotation.x
-    goal.x = t.transform.rotation.y
+    goal.y = t.transform.rotation.y
 
     print(goal.x)
 
+    
+    linearx=0.0
+    angularz=0.2
 
-def avoid_follow(data):
+    msg_twist.linear.x = linearx
+    msg_twist.angular.z = angularz
 
-    rot_to_goal = atan2(goal.y, goal.x)
+    pub.publish(msg_twist)
 
-    range={
-        "right" : min(min(data.ranges[0:239]) , 2),
-        "center" : min(min(data.ranges[240:479]) , 2),
-        "left" : min(min(data.ranges[480:719]) , 2)
-    }
 
-    if abs(rot_to_goal - theta) > 0.1:
-        linearx = 0.0
-        angularz = 0.3
-
-        if ( range["right"] > 1  and range["center"] < 1 and range["left"] > 1 ):
-            case = 'something do be in front of me!'
-            linearx=0
-            angularz=-0.5
-        else:
-            linear.x = 0.0
-            angular = 0.5
-
-    pub.publish(msg)
 
 def listener():
     global pub
@@ -83,9 +78,8 @@ def listener():
     rospy.init_node('leggies_broadcaster')
     rospy.Subscriber('/people_tracker_measurements', PositionMeasurementArray, handle_leggies)
     
+    #rospy.Subscriber('/base_scan', LaserScan, avoid_follow)
     pub = rospy.Publisher("/cmd_vel" , Twist , queue_size=1)
-    sub = rospy.Subscriber('/base_scan', LaserScan, avoid_follow)
-    
     
     rospy.spin()
 
