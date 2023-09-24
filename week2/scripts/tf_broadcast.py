@@ -29,6 +29,27 @@ def new_odom(dat):
     x = dat.pose.pose.position.x
     y = dat.pose.pose.position.y
 
+def avoid_follow(dat):
+    range={
+        "right" : min(min(dat.ranges[0:239]) , 2),
+        "center" : min(min(dat.ranges[240:479]) , 2),
+        "left" : min(min(dat.ranges[480:719]) , 2)
+    }
+
+    if ( range["right"] > 1  and range["center"] < 1 and range["left"] > 1 ):
+        print("front wall")
+        linearx=0
+        angularz=-0.5
+    elif ( range["right"] < 1  and range["center"] > 1 and range["left"] > 1 ):
+        print("right wall")
+        linearx=0
+        angularz=0.5
+    elif ( range["right"] > 1  and range["center"] > 1 and range["left"] < 1 ):
+        print("left wall")
+        linearx=0
+        angularz=-0.5
+
+
 
 def handle_leggies(msg):
     br = tf2_ros.TransformBroadcaster()
@@ -40,6 +61,15 @@ def handle_leggies(msg):
 
     if len(msg.people) == 0:
         print("no leggies")
+
+        linearx=0.0
+        angularz=0.2
+
+        msg_twist.linear.x = linearx
+        msg_twist.angular.z = angularz
+
+        pub.publish(msg_twist)
+
         return None
 
     t.transform.translation.x = msg.people[0].pos.x
@@ -54,22 +84,22 @@ def handle_leggies(msg):
 
     br.sendTransform(t)
 
-    print(f"leggies found{t.transform.translation}")
+    print(f"leggies found:{t.transform.translation}")
     
     goal.x = t.transform.rotation.x
     goal.y = t.transform.rotation.y
 
     print(goal.x)
 
-    
-    linearx=0.0
-    angularz=0.2
+    linearx=0.5
+    angularz=0.0
+
+    avoid_follow
 
     msg_twist.linear.x = linearx
     msg_twist.angular.z = angularz
 
     pub.publish(msg_twist)
-
 
 
 def listener():
@@ -78,7 +108,7 @@ def listener():
     rospy.init_node('leggies_broadcaster')
     rospy.Subscriber('/people_tracker_measurements', PositionMeasurementArray, handle_leggies)
     
-    #rospy.Subscriber('/base_scan', LaserScan, avoid_follow)
+    rospy.Subscriber('/base_scan', LaserScan, avoid_follow)
     pub = rospy.Publisher("/cmd_vel" , Twist , queue_size=1)
     
     rospy.spin()
