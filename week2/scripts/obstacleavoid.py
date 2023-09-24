@@ -10,6 +10,9 @@ case=''
 linearx=0
 angularz=0
 
+# i followed a tutorial : https://github.com/SravanChittupalli/Obstacle-Avoidance-Bot-Using-ROS/blob/master/src/scripts/obstacle_avoidance.py
+
+
 def callback(data):
     range={
         "right" : min(min(data.ranges[0:239]) , 2),
@@ -33,22 +36,7 @@ def callback(data):
         case = 'to the left!'
         linearx=0
         angularz=-0.5
-    elif ( range["right"] < 1  and range["center"] > 1 and range["left"] < 1 ):
-        case = 'both sides!'
-        linearx=0.6
-        angularz=0
-    elif ( range["right"] > 1  and range["center"] < 1 and range["left"] < 1 ):
-        case = 'coming at me from ahead and right!'
-        linearx=0
-        angularz=-0.5
-    elif ( range["right"] < 1  and range["center"] < 1 and range["left"] > 1 ):
-        case = 'front and right?'
-        linearx=0
-        angularz=0.5
-    elif ( range["right"] < 1  and range["center"] < 1 and range["left"] < 1 ):
-        case = 'look where your going! (front hehe)'
-        linearx=0
-        angularz=0.8
+    
 
     print(case)
 
