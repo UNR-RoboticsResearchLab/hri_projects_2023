@@ -10,6 +10,7 @@ from geometry_msgs.msg import Point, Twist
 from sensor_msgs.msg import LaserScan
 import math
 from people_msgs.msg import PositionMeasurementArray
+from tf.transformations import euler_from_quaternion
 from math import atan2
 from nav_msgs.msg import Odometry
 
@@ -18,6 +19,8 @@ linearx=0
 angularz=0
 
 theta=0
+x=0
+y=0
 
 isBlocked=True
 foundLegs=False
@@ -30,30 +33,38 @@ def localRad(data):
     
     odomData = data
 
-    local_or = data.pose.pose.orientation
-    or_list = [local_or.x, local_or.y, local_or.z, local_or.w]
-    theta = local_or.z
+    x = data.pose.pose.position.x
+    y = data.pose.pose.position.y
+
+    yaw = data.pose.pose.orientation
+
+    (roll, pitch, theta) = euler_from_quaternion([yaw.x, yaw.y, yaw.z, yaw.w])
 
 def faceHuman(rad):
-    global theta, odomData
+    global theta, odomData, x, y, goal
 
-    if(rad > odomData.pose.pose.orientation.z):
-        while(theta<rad):
-            msg_twist.linear.x=0
-            msg_twist.angular.z=0.5
-            pub.publish(msg_twist)
-            rospy.sleep(0.1)
+    goal.x = x 
+    goal.y = y
+
+
+    inc_x = goal.x -x
+    inc_y = goal.y -y
+
+    angle_to_goal = atan2(inc_y, inc_x)
+
+    if abs(angle_to_goal - theta) > 0.1:
+        msg_twist.linear.x = 0.0
+        msg_twist.angular.z = 0.3
+        pub.publish(msg_twist)
     else:
-        while(theta > rad):
-            msg_twist.linear.x=0
-            msg_twist.angular.z=-0.5
-            pub.publish(msg_twist)
-            rospy.sleep(0.1)
+        msg_twist.linear.x = 0.5
+        msg_twist.angular.z = 0.0
+        pub.publish(msg_twist)
 
 
 
 def avoid_follow(dat):
-    global isBlocked, linearx, angularz, msg_twist
+    global isBlocked, linearx, angularz, msg_twist, foundLegs
 
     range={
         "right" : min(min(dat.ranges[0:239]) , 2),
@@ -61,7 +72,7 @@ def avoid_follow(dat):
         "left" : min(min(dat.ranges[480:719]) , 2)
     }
 
-    if ( range["right"] >1  and range["center"] > 1 and range["left"] >1):
+    if ( range["right"] >1  and range["center"] > 1 and range["left"] >1 and foundLegs):
         isBlocked=False
         linearx=0.4
         angularz=0
@@ -98,8 +109,8 @@ def handle_leggies(msg):
 
     if len(msg.people) == 0:
         print("no leggies")
-        foundLegs=False
         return None
+
 
     t.transform.translation.x = msg.people[0].pos.x
     t.transform.translation.y = msg.people[0].pos.y
@@ -122,8 +133,8 @@ def listener():
     global pub
 
     rospy.init_node('leggies_broadcaster')
-    rospy.Subscriber('/odom', Odometry, localRad)
     rospy.Subscriber('/people_tracker_measurements', PositionMeasurementArray, handle_leggies)
+    rospy.Subscriber('/odom', Odometry, localRad)
     rospy.Subscriber('/base_scan', LaserScan, avoid_follow)
     pub = rospy.Publisher("/cmd_vel" , Twist , queue_size=1)
     
