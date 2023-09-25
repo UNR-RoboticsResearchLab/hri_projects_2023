@@ -19,6 +19,7 @@ x = 0.0
 y = 0.0 
 theta = 0.0
 goal=Point()
+case=''
 
 def newOdom(msg):
     global x
@@ -62,11 +63,35 @@ def handle_leggies(msg):
     goal.x = t.transform.translation.x
     goal.y = t.transform.translation.y
 
+def avoid_follow(dat):
+    global case
+
+    range={
+        "right" : min(min(dat.ranges[0:239]) , 2),
+        "center" : min(min(dat.ranges[240:479]) , 2),
+        "left" : min(min(dat.ranges[480:719]) , 2)
+    }
+
+    if ( range["right"] >1  and range["center"] > 1 and range["left"] >1):
+        case='free'
+        print("front free")
+    elif ( range["right"] > 1  and range["center"] < 1 and range["left"] > 1 ):
+        case='front'
+        print("front wall")
+    elif ( range["right"] < 1  and range["center"] > 1 and range["left"] > 1 ):
+        case='right'
+        print("right wall")
+    elif ( range["right"] > 1  and range["center"] > 1 and range["left"] < 1 ):
+        case='left'
+        print("left wall")
+
+
 
 
 rospy.init_node("speed_controller")
 
 rospy.Subscriber("/odom", Odometry, newOdom)
+rospy.Subscriber('/base_scan', LaserScan, avoid_follow)
 rospy.Subscriber('/people_tracker_measurements', PositionMeasurementArray, handle_leggies)
 pub = rospy.Publisher("/cmd_vel", Twist, queue_size = 1)
 
@@ -86,8 +111,18 @@ while not rospy.is_shutdown():
         speed.linear.x = 0.0
         speed.angular.z = 0.3
     else:
-        speed.linear.x = 0.5
-        speed.angular.z = 0.0
+        if case=='free':
+            speed.linear.x = 0.5
+            speed.angular.z = 0.0
+        elif case=='front':
+            speed.linear.x = 0.0
+            speed.angular.z = 0.3
+        elif case=='right':
+            speed.linear.x = 0.0
+            speed.angular.z = 0.3
+        elif case=='left':
+            speed.linear.x = 0.0
+            speed.angular.z = 0.3
 
     pub.publish(speed)
     r.sleep()  
