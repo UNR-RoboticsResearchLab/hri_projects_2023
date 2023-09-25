@@ -30,8 +30,6 @@ goal=Point()
 
 def localRad(data):
     global odomData, theta
-    
-    odomData = data
 
     x = data.pose.pose.position.x
     y = data.pose.pose.position.y
@@ -40,66 +38,43 @@ def localRad(data):
 
     (roll, pitch, theta) = euler_from_quaternion([yaw.x, yaw.y, yaw.z, yaw.w])
 
-def faceHuman(rad):
-    global theta, odomData, x, y, goal
+# def avoid_follow(dat):
+#     global isBlocked, linearx, angularz, msg_twist, foundLegs
 
-    goal.x = x 
-    goal.y = y
+#     range={
+#         "right" : min(min(dat.ranges[0:239]) , 2),
+#         "center" : min(min(dat.ranges[240:479]) , 2),
+#         "left" : min(min(dat.ranges[480:719]) , 2)
+#     }
 
+#     if ( range["right"] >1  and range["center"] > 1 and range["left"] >1 and foundLegs):
+#         isBlocked=False
+#         linearx=0.4
+#         angularz=0
+#         print("front free")
+#     elif ( range["right"] > 1  and range["center"] < 1 and range["left"] > 1 ):
+#         isBlocked=True
+#         linearx=0
+#         angularz=-0.5
+#         print("front wall")
+#     elif ( range["right"] < 1  and range["center"] > 1 and range["left"] > 1 ):
+#         isBlocked=True
+#         linearx=0
+#         angularz=0.5
+#         print("right wall")
+#     elif ( range["right"] > 1  and range["center"] > 1 and range["left"] < 1 ):
+#         isBlocked=True
+#         linearx=0
+#         angularz=-0.5
+#         print("left wall")
 
-    inc_x = goal.x -x
-    inc_y = goal.y -y
-
-    angle_to_goal = atan2(inc_y, inc_x)
-
-    if abs(angle_to_goal - theta) > 0.1:
-        msg_twist.linear.x = 0.0
-        msg_twist.angular.z = 0.3
-        pub.publish(msg_twist)
-    else:
-        msg_twist.linear.x = 0.5
-        msg_twist.angular.z = 0.0
-        pub.publish(msg_twist)
-
-
-
-def avoid_follow(dat):
-    global isBlocked, linearx, angularz, msg_twist, foundLegs
-
-    range={
-        "right" : min(min(dat.ranges[0:239]) , 2),
-        "center" : min(min(dat.ranges[240:479]) , 2),
-        "left" : min(min(dat.ranges[480:719]) , 2)
-    }
-
-    if ( range["right"] >1  and range["center"] > 1 and range["left"] >1 and foundLegs):
-        isBlocked=False
-        linearx=0.4
-        angularz=0
-        print("front free")
-    elif ( range["right"] > 1  and range["center"] < 1 and range["left"] > 1 ):
-        isBlocked=True
-        linearx=0
-        angularz=-0.5
-        print("front wall")
-    elif ( range["right"] < 1  and range["center"] > 1 and range["left"] > 1 ):
-        isBlocked=True
-        linearx=0
-        angularz=0.5
-        print("right wall")
-    elif ( range["right"] > 1  and range["center"] > 1 and range["left"] < 1 ):
-        isBlocked=True
-        linearx=0
-        angularz=-0.5
-        print("left wall")
-
-    msg_twist.linear.x=linearx
-    msg_twist.angular.z=angularz
-    pub.publish(msg_twist)
+#     msg_twist.linear.x=linearx
+#     msg_twist.angular.z=angularz
+#     pub.publish(msg_twist)
 
 
 def handle_leggies(msg):
-    global foundLegs, isBlocked, linearx, angularz, msg_twist
+    global msg_twist, goal
     br = tf2_ros.TransformBroadcaster()
     t = geometry_msgs.msg.TransformStamped()
 
@@ -125,18 +100,37 @@ def handle_leggies(msg):
 
     print(f"leggies found:{t.transform.translation.z}")
     
-    faceHuman(t.transform.rotation.z)
+    goal.x = t.transform.rotation.x
+    goal.y = t.transform.rotation.y
+
+    theta = t.transform.rotation.z
 
 
 
 def listener():
-    global pub
+    global pub, goal, x, y, theta
 
     rospy.init_node('leggies_broadcaster')
     rospy.Subscriber('/people_tracker_measurements', PositionMeasurementArray, handle_leggies)
     rospy.Subscriber('/odom', Odometry, localRad)
-    rospy.Subscriber('/base_scan', LaserScan, avoid_follow)
+    #rospy.Subscriber('/base_scan', LaserScan, avoid_follow)
     pub = rospy.Publisher("/cmd_vel" , Twist , queue_size=1)
+
+    while not rospy.is_shutdown():
+
+        inc_x = goal.x -x
+        inc_y = goal.y -y
+
+        angle_to_goal = atan2(inc_y, inc_x)
+
+        if abs(angle_to_goal - theta) > 0.1:
+            msg_twist.linear.x = 0.0
+            msg_twist.angular.z = 0.3
+        else:
+            msg_twist.linear.x = 0.5
+            msg_twist.angular.z = 0.0
+
+        pub.publish(msg_twist)
     
     rospy.spin()
 
