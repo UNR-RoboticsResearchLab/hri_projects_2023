@@ -12,7 +12,7 @@ resolution 0.02
 # configure the GUI window
 window
 (
-  size [ 1019 1059 ] # in pixels
+  size [ 828 1016 ] # in pixels
   scale 33.632   # pixels per meter
   center [ 0.401  1.831 ]
   rotate [ 0.000  0.000 ]
@@ -57,7 +57,7 @@ define erratic position
 )
 
 # throw in a robot
-erratic( pose [ -4.203 -6.404 0.000 -176.172 ] name "pioneer" )
+erratic( pose [ -5.712 7.549 0.000 -51.997 ] name "pioneer" )
 #block( pose [ -3.02 -8.88 0.000 180.000 ] color "green")
 
 
@@ -66,7 +66,7 @@ person
 (     
   # can refer to the robot by this name
   name "r0"
-  pose [ -7.164 -7.991 0.000 -31.386 ] 
+  pose [ -5.737 3.010 0.000 -31.386 ] 
 
 
 
