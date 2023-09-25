@@ -107,22 +107,27 @@ while not rospy.is_shutdown():
 
     angle_to_goal = atan2(inc_y, inc_x)
 
-    if abs(angle_to_goal-theta)>0.1:
-        speed.linear.x = 0.0
-        speed.angular.z = 0.3
-    else:
-        if case=='free':
-            speed.linear.x = 0.5
-            speed.angular.z = 0.0
-        elif case=='front':
-            speed.linear.x = 0.0
-            speed.angular.z = 0.3
-        elif case=='right':
-            speed.linear.x = 0.0
-            speed.angular.z = 0.3
-        elif case=='left':
-            speed.linear.x = 0.0
-            speed.angular.z = 0.3
+    target_rad = angle_to_goal*math.pi/180
+
+    speed.linear.x=0.0
+    speed.angular.z=0.5*(target_rad-theta)
+
+    # if abs(angle_to_goal-theta)>0.1:
+    #     speed.linear.x = 0.0
+    #     speed.angular.z = 0.3
+    # else:
+    #     if case=='free':
+    #         speed.linear.x = 0.5
+    #         speed.angular.z = 0.0
+    #     elif case=='front':
+    #         speed.linear.x = 0.0
+    #         speed.angular.z = 0.3
+    #     elif case=='right':
+    #         speed.linear.x = 0.0
+    #         speed.angular.z = 0.3
+    #     elif case=='left':
+    #         speed.linear.x = 0.0
+    #         speed.angular.z = 0.3
 
     pub.publish(speed)
     r.sleep()  
