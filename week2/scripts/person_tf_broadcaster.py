@@ -7,12 +7,15 @@ from tf.transformations import quaternion_from_euler
 import numpy as np
 from tf2_ros import TransformBroadcaster
 
+global t
+
 def callback(msg):
-    br = TransformBroadcaster()
+    global t
     q = quaternion_from_euler(0, 0, 0)
-    for person in msg.people:
+    try:
+        person = msg.people[0]
+
         t = TransformStamped()
-        t.header.stamp = rospy.Time.now()
         t.header.frame_id = "odom"
         t.child_frame_id = "person"
 
@@ -24,15 +27,30 @@ def callback(msg):
         t.transform.rotation.y = q[1]
         t.transform.rotation.z = q[2]
         t.transform.rotation.w = q[3]
-
-        br.sendTransform(t)
-           
+    except IndexError:
+        n = 1
 
 def talker():
     rospy.init_node('person_tf_publisher', anonymous=True)
     rospy.Subscriber('/people_tracker_measurements', PositionMeasurementArray, callback)
+    br = TransformBroadcaster()
+    rate = rospy.Rate(1)
+
+    global t
+    waiting = 1
+    while waiting:
+        try:
+            person = t
+            waiting = 0
+        except NameError:
+            continue
     
-    rospy.spin()
+    while not rospy.is_shutdown():
+        person.header.stamp = rospy.Time.now()
+        br.sendTransform(person)
+        rate.sleep()
+        
+
 # if __name__ == '__main__':
 if __name__ == '__main__':
     try:
