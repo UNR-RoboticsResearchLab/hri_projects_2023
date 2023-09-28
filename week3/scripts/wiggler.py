@@ -12,8 +12,8 @@ def wiggler():
     random.seed()
     while not rospy.is_shutdown():
         # generate random x and y values
-        xvel = random.gauss(0, 0.3)
-        yvel = random.gauss(0, 0.2)
+        xvel = random.gauss(0, 0.1)
+        yvel = random.gauss(0, 0.1)
         turn = 0 #random.gauss(0, 0.2)
         
         cmd_vel = Twist()

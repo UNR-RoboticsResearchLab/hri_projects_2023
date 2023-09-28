@@ -1,0 +1,11 @@
+<launch>
+    <group ns='robot_1'>
+        <node pkg='week3' type="wiggler.py" name='wiggler1'/>    
+    </group>
+    <group ns='robot_2'>
+        <node pkg='week3' type="wiggler.py" name='wiggler2'/>    
+    </group>
+    <group ns='robot_3'>
+        <node pkg='week3' type="wiggler.py" name='wiggler3'/>    
+    </group>
+</launch>
