@@ -1,0 +1,118 @@
+
+
+# set the resolution of the underlying raytrace model in meters
+resolution 0.02
+
+interval_sim 100  # simulation timestep in milliseconds
+
+window
+(
+  size [ 800 800 ] # in pixels
+  scale 20   # pixels per meter
+  rotate [ 0.000  0.000 ]
+  show_data 1              # 1=on 0=off
+)
+
+define floorplan model
+(
+  # sombre, sensible, artistic
+  color "gray30"
+
+  # most maps will need a bounding box
+  boundary 1
+
+  gui_nose 0
+  gui_grid 0
+  gui_move 0
+  gui_outline 0
+  gripper_return 0
+  fiducial_return 0
+  ranger_return 1.000
+  obstacle_return 0
+)
+
+floorplan
+( 
+  name "room"
+  bitmap "basic_map.pgm"
+  size [35.000 35.00 0.500]
+   pose [ 0. 0.000 0.000 90.000 ]
+)
+
+
+define block model
+(
+  size [0.500 0.500 0.500]
+  gui_nose 0
+  fiducial_return 1
+)
+
+define leg position
+(
+  size [0.33 0.33 0.1]
+
+  block(
+    points 16
+    point[0] [ 0.225 0.000 ]
+    point[1] [ 0.208 0.086 ]
+    point[2] [ 0.159 0.159 ]
+    point[3] [ 0.086 0.208 ]
+    point[4] [ 0.000 0.225 ]
+    point[5] [ -0.086 0.208 ]
+    point[6] [ -0.159 0.159 ]
+    point[7] [ -0.208 0.086 ]
+    point[8] [ -0.225 0.000 ]
+    point[9] [ -0.208 -0.086 ]
+    point[10] [ -0.159 -0.159 ]
+    point[11] [ -0.086 -0.208 ]
+    point[12] [ -0.000 -0.225 ]
+    point[13] [ 0.086 -0.208 ]
+    point[14] [ 0.159 -0.159 ]
+    point[15] [ 0.208 -0.086 ]
+    z [0 0.1]
+  )
+
+
+  color "gray50"
+)
+
+define create roomba( color "gray90" )
+
+
+define topurg ranger
+(
+  sensor(       
+    range [ 0.0  10.0 ]
+    fov 270.25
+   samples 1081
+  )
+
+  # generic model properties
+  #color "green"
+  color_rgba [0 1 0 0.5]
+  size [ 0.150 0.150 0.100 ]
+)
+
+
+
+define erratic position
+(
+  #size [0.415 0.392 0.25]
+  size [0.350 0.350 0.250]
+  origin [-0.050 0.000 0.000 0.000]
+  gui_nose 1
+  drive "diff"
+  topurg(pose [ 0.050 0.000 0.100 0.000 ])
+)
+
+# throw in a robot
+erratic( pose [ 1.93 8.12 0.000 180.000 ] name "pioneer" )
+block( pose [ -3.02 -8.88 0.000 180.000 ] color "green")
+
+leg
+( 
+  name "bob" 
+  pose [ -2.02 -8.88 0.000 180.000 ] 
+  localization "gps" 
+  localization_origin [ 0 0 0 0 ]
+) 
