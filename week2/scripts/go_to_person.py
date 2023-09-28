@@ -24,11 +24,11 @@ def avoid_obstacle(yaw):
     num_right = 0
     for i in laser_scan.ranges:
         if(i <= 1.5):
-            if(angle_curr <= np.pi/2 and angle_curr >= -np.pi/2):
-                if(angle_curr < 0):
-                    num_left += 1
-                else:
-                    num_right += 0
+            # if(angle_curr <= np.pi/2 and angle_curr >= -np.pi/2):
+            if(angle_curr < 0):
+                num_left += 1
+            else:
+                num_right += 0
         angle_curr += laser_scan.angle_increment
     
     if(num_right == 0 and num_left == 0):
