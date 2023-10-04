@@ -38,7 +38,6 @@ def is_line(person_array):
     det = np.linalg.det(det_arr)
 
     print(det_arr)
-    
 
     #if collinear
     print(det)
@@ -46,6 +45,27 @@ def is_line(person_array):
     #if diagonal negative
 
     return det
+
+def is_circle(person_array):
+
+
+
+    return None
+
+def circle_from_3_points(z1:complex, z2:complex, z3:complex) -> tuple[complex, float]:
+    if (z1 == z2) or (z2 == z3) or (z3 == z1):
+        raise ValueError(f"Duplicate points: {z1}, {z2}, {z3}")
+        
+    w = (z3 - z1)/(z2 - z1)
+    
+    # You should change 0 to a small tolerance for floating point comparisons
+    if abs(w.imag) <= 0:
+        raise ValueError(f"Points are collinear: {z1}, {z2}, {z3}")
+        
+    c = (z2 - z1)*(w - abs(w)**2)/(2j*w.imag) + z1  # Simplified denominator
+    r = abs(z1 - c)
+    
+    return c, r
 
 
 
