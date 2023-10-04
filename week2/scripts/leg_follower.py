@@ -104,30 +104,40 @@ print(goal)
 while not rospy.is_shutdown():
     inc_x = goal.x -x
     inc_y = goal.y -y
+    opt_theta = 0
 
     angle_to_goal = atan2(inc_y, inc_x)
 
-    target_rad = angle_to_goal*math.pi/180
+    alpha = angle_to_goal - theta
+    beta = angle_to_goal - theta +2*math.pi
+    gamma = angle_to_goal - theta -2*math.pi
 
-    speed.linear.x=0.0
-    speed.angular.z=0.5*(target_rad-theta)
+    if(abs(alpha) < abs(beta) and abs(alpha) < abs(gamma)):
+        opt_theta = alpha
+    elif(abs(beta) < abs(alpha) and abs(beta) < abs(gamma)):
+        opt_theta = beta
+    else:
+        opt_theta = gamma
 
-    # if abs(angle_to_goal-theta)>0.1:
-    #     speed.linear.x = 0.0
-    #     speed.angular.z = 0.3
-    # else:
-    #     if case=='free':
-    #         speed.linear.x = 0.5
-    #         speed.angular.z = 0.0
-    #     elif case=='front':
-    #         speed.linear.x = 0.0
-    #         speed.angular.z = 0.3
-    #     elif case=='right':
-    #         speed.linear.x = 0.0
-    #         speed.angular.z = 0.3
-    #     elif case=='left':
-    #         speed.linear.x = 0.0
-    #         speed.angular.z = 0.3
+    if abs(angle_to_goal-theta)>0.1:
+        while (abs(angle_to_goal - theta) > .1):
+            speed.linear.x = 0
+            speed.angular.z = opt_theta
+            pub.publish(speed)
+            rospy.sleep(0.1)
+    else:
+        if case=='free':
+            speed.linear.x = 0.5
+            speed.angular.z = 0.0
+        elif case=='front':
+            speed.linear.x = 0.0
+            speed.angular.z = 0.3
+        elif case=='right':
+            speed.linear.x = 0.0
+            speed.angular.z = 0.3
+        elif case=='left':
+            speed.linear.x = 0.0
+            speed.angular.z = 0.3
 
-    pub.publish(speed)
-    r.sleep()  
+        pub.publish(speed)
+        rospy.sleep(0.1)

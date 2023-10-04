@@ -6,6 +6,7 @@ import tf2_ros
 
 import rospy
 import math
+import numpy as np
 
 import geometry_msgs.msg
 from sensor_msgs.msg import LaserScan
@@ -15,6 +16,7 @@ from geometry_msgs.msg import Point, Twist
 from people_msgs.msg import PositionMeasurementArray
 from math import atan2
 
+
 msg_twist=Twist()
 linearx=0
 angularz=0
@@ -23,16 +25,27 @@ goal=Point()
 
 def is_line(person_array):
 
-    #if on the same x axis
+    print(len(person_array))
 
+    det_arr = np.zeros(shape=(len(person_array),3))
     
 
-    #if on the same y axis
+    for i in range(len(person_array)):
+        det_person_array = np.array([1, person_array[i].pos.x, person_array[i].pos.y])
+        det_arr[i] = det_person_array
+        print(det_arr)
 
-    #if diagonal pos
+    det = np.linalg.det(det_arr)
+
+    print(det_arr)
+    
+
+    #if collinear
+    print(det)
 
     #if diagonal negative
 
+    return det
 
 
 
@@ -63,7 +76,11 @@ def handle_leggies(msg):
             t.transform.rotation.w = q[3]
 
             print(f"person_{i} :" + str(t.transform))
-
+        
+        if abs(is_line(msg.people))<1.1:
+            print("people in a line")
+        else:
+            print("people not in a line")
 
 
 
