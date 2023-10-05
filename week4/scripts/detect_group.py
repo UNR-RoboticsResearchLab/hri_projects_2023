@@ -1,130 +1,99 @@
 #!/usr/bin/env python3
 
 import rospy
-from geometry_msgs.msg import PointStamped, TransformStamped
-from sensor_msgs.msg import LaserScan
-import tf2_ros
 import numpy as np
-from people_msgs.msg import People
-import tf2_geometry_msgs
+from people_msgs.msg import PositionMeasurementArray
+from tf.transformations import quaternion_from_euler
+import numpy as np
+from tf2_ros import TransformBroadcaster
+from week4.msg import Person
 
+global people
 
 def callback(msg):
     global people
     people = []
-    curr = 0
     for person in msg.people:
-        try:
-            t = TransformStamped()
-            t.header.frame_id = "robot_0/odom"
-            frame_id = str("person"+str(curr))
-            t.child_frame_id = frame_id
+        people.append(np.array([person.pos.x,person.pos.y,person.pos.z]))
+    people = np.array(people)
 
-            t.transform.translation.x=person.pos.x
-            t.transform.translation.y=person.pos.y
-            t.transform.translation.z=person.pos.z
+def detect_group(people):
+    groups = []
+    for a in people:
+        group = [a]
+        for b in people:
+            if (np.linalg.norm(a-b) < 10 and not np.array_equal(a,b)):
+                group.append(b)
+        if (len(group)>1):
+            group = np.array(group)
+            group = np.sort(group,axis = 0)
+            groups.append(group)
+    
+    groups = np.array(groups)
+    groups = np.unique(groups,axis=0)
 
-            t.transform.rotation.x = q[0]
-            t.transform.rotation.y = q[1]
-            t.transform.rotation.z = q[2]
-            t.transform.rotation.w = q[3]
-
-            people.append(t)
-
-        except IndexError:
-            n = 1
-
-        curr += 1
-
-def get_transform(frame_id, tf_buffer):
-    waiting = 1
-    while waiting:
-        try:
-            transform = tf_buffer.lookup_transform('robot_0/base_link', frame_id, rospy.Time())
-            waiting = 0
-        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-            continue
-    return transform
+    return groups
 
 def get_line_eq(a,b):
-    m = (a.transform.translation.y - b.transform.translation.y)/(a.transform.translation.x - b.transform.translation.x)
-    s = a.transform.translation.y - m*a.transform.translation.x
+    m = (a[1] - b[1])/(a[0] - b[0])
+    s = a[1] - m*a[0]
     
     return m,s
 
-def detect_line(a,b,c):
+def detect_line(groups):
+    a = groups[0]
+    b = groups[1]
+    c = groups[2]
+
     m,s = get_line_eq(a,b)
-    c_predic = m*c.transform.translation.x + s
-    c_diff = c.transform.translation.y - c_predic
+    c_predic = m*c[0] + s
+    c_diff = c[1] - c_predic
     if(c_diff >= -1 and c_diff <= 1):
         return 1
     else:
         return 0
-    
-def detect_circle(a,b,c):
-    a_arr = np.array([a.transform.translation.x,a.transform.translation.y])
-    b_arr = np.array([b.transform.translation.x,b.transform.translation.y])
-    c_arr = np.array([c.transform.translation.x,c.transform.translation.y])
 
-    if(np.linalg.norm(a_arr - b_arr) <= 5 and np.linalg.norm(b_arr - c_arr) <= 5):
-        return 1
+def get_group_type(group):
+    if(len(group) == 2 or detect_line(group)):
+        return 'line'
     else:
-        return 0
-    
-def create_transform(x,y):
-    goal_t = TransformStamped()
-    goal_t.transform.translation.x = x
-    goal_t.transform.translation.y = y
-    goal_t.transform.rotation.w = 1
-    goal_t.header.frame_id = 'robot_0/base_link'
-    goal_t.child_frame_id = 'goal'
+        return 'circle'
 
-    return goal_t
-
-def detect_group(tf_buffer):
+def create_msg(groups):
     curr = 0
-    ok = 1
     people = []
-    while ok:
-        try:
-            people.append(get_transform("person"+str(curr), tf_buffer))
-        except tf_error: #fix this
-            ok = 0
+    for group in groups:
+        type = get_group_type(group)
+        curr += 1
 
-def main():
-    rospy.init_node('detect_group', anonymous=True)
 
-    tf_buffer = tf2_ros.Buffer()
-    listener = tf2_ros.TransformListener(tf_buffer)
-    tf_broadcaster = tf2_ros.TransformBroadcaster()
 
-    rate = rospy.Rate(1) 
-    global laser_scan
-    laser_scan = LaserScan()
+    return groups
 
-    person0 = get_transform('person0',tf_buffer)
-    person1 = get_transform('person1',tf_buffer)
-    person2 = get_transform('person2',tf_buffer)
+def talker():
+    rospy.init_node('group_detector', anonymous=True)
+    rospy.Subscriber('/people_tracker_measurements', PositionMeasurementArray, callback)
+    br = TransformBroadcaster()
+    rate = rospy.Rate(1)
 
-    # if(detect_line(person0,person1,person2)):
-
-    # elif(detect_circle(person0,person1,person2)):
-    #     print("here2")
-    # else:
-    #     print("here3")
-    #     goal = create_transform(0,0)
-
-    # goal = to_odom(goal,tf_buffer)
+    global people
 
     while not rospy.is_shutdown():
-        goal.header.stamp = rospy.Time.now()
-        tf_broadcaster.sendTransform(goal)
+        try:
+            groups = detect_group(people)
+            groups = get_group_type(groups)
+            print(groups)
+            print('\n\n')
+
+        except NameError:
+            continue
         rate.sleep()
-    
-    
+        
+
 # if __name__ == '__main__':
 if __name__ == '__main__':
     try:
-        main()
+        talker()
     except rospy.ROSInterruptException:
         pass
+
