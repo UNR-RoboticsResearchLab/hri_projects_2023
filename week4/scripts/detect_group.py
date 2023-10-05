@@ -5,36 +5,36 @@ from geometry_msgs.msg import PointStamped, TransformStamped
 from sensor_msgs.msg import LaserScan
 import tf2_ros
 import numpy as np
+from people_msgs.msg import People
 import tf2_geometry_msgs
 
 
-global laser_scan
-
-def to_odom(goal, tf_buffer):
-    waiting = 1
-    while waiting:
+def callback(msg):
+    global people
+    people = []
+    curr = 0
+    for person in msg.people:
         try:
-            odom = tf_buffer.lookup_transform('robot_0/odom', 'robot_0/base_link', rospy.Time())
-            waiting = 0
-        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-            continue
+            t = TransformStamped()
+            t.header.frame_id = "robot_0/odom"
+            frame_id = str("person"+str(curr))
+            t.child_frame_id = frame_id
 
-    goal_pt = PointStamped()
-    goal_pt.point.x = goal.transform.translation.x
-    goal_pt.point.y = goal.transform.translation.y
-    goal_pt.header.frame_id = 'robot_0/base_link'
+            t.transform.translation.x=person.pos.x
+            t.transform.translation.y=person.pos.y
+            t.transform.translation.z=person.pos.z
 
-    print(goal_pt.point.x, goal_pt.point.y)
+            t.transform.rotation.x = q[0]
+            t.transform.rotation.y = q[1]
+            t.transform.rotation.z = q[2]
+            t.transform.rotation.w = q[3]
 
-    goal_pt = tf2_geometry_msgs.do_transform_point(goal_pt, odom)
+            people.append(t)
 
-    goal.header.frame_id='robot_0/odom'
-    goal.transform.translation.x = goal_pt.point.x
-    goal.transform.translation.y = goal_pt.point.y
+        except IndexError:
+            n = 1
 
-    print(goal.transform.translation.x, goal.transform.translation.y)
-    
-    return goal
+        curr += 1
 
 def get_transform(frame_id, tf_buffer):
     waiting = 1
@@ -81,37 +81,6 @@ def create_transform(x,y):
 
     return goal_t
 
-def get_line_goal(a,b,c):
-    a_arr = np.array([a.transform.translation.x,a.transform.translation.y])
-    b_arr = np.array([b.transform.translation.x,b.transform.translation.y])
-    c_arr = np.array([c.transform.translation.x,c.transform.translation.y])
-    coord_arr = np.array([a_arr,b_arr,c_arr])
-    coord_arr = np.sort(coord_arr,axis=0)
-
-    dist=np.average([np.linalg.norm(coord_arr[0]-coord_arr[1]),
-                     np.linalg.norm(coord_arr[1]-coord_arr[2])])
-
-    m,s = get_line_eq(a,b)
-
-    theta = np.arctan(m)
-    goal_x = np.cos(theta)*dist + coord_arr[2][0]    
-    goal_y = m * goal_x + s
-
-    goal_t = create_transform(goal_x, goal_y)
-
-    return goal_t
-
-def get_circle_goal(a,b,c):
-    x_arr = np.array([a.transform.translation.x,b.transform.translation.x,c.transform.translation.x])
-    y_arr = np.array([a.transform.translation.y,b.transform.translation.y,c.transform.translation.y])
-
-    goal_x = np.average(x_arr)
-    goal_y = np.average(y_arr)
-
-    goal_t = create_transform(goal_x, goal_y)
-
-    return goal_t
-
 def detect_group():
     rospy.init_node('detect_goal', anonymous=True)
 
@@ -128,11 +97,9 @@ def detect_group():
     person2 = get_transform('person2',tf_buffer)
 
     if(detect_line(person0,person1,person2)):
-        print("here1")
-        goal=get_line_goal(person0,person1,person2)
+
     elif(detect_circle(person0,person1,person2)):
         print("here2")
-        goal=get_circle_goal(person0,person1,person2)
     else:
         print("here3")
         goal = create_transform(0,0)
