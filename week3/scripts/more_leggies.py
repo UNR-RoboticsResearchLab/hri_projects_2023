@@ -7,6 +7,8 @@ import tf2_ros
 import rospy
 import math
 import numpy as np
+import circle_fit as cf
+
 
 import geometry_msgs.msg
 from sensor_msgs.msg import LaserScan
@@ -15,6 +17,7 @@ from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Point, Twist
 from people_msgs.msg import PositionMeasurementArray
 from math import atan2
+from circle_fit import taubinSVD
 
 
 msg_twist=Twist()
@@ -42,31 +45,27 @@ def is_line(person_array):
     #if collinear
     print(det)
 
-    #if diagonal negative
-
     return det
 
+
+#cite: https://github.com/AlliedToasters/circle-fit
 def is_circle(person_array):
 
+    point_coordinates = []
+
+    if len(person_array) >= 2:
+
+        for i in range(len(person_array)):
+            person_point_array = [person_array[i].pos.x, person_array[i].pos.y]
+            point_coordinates.append(person_point_array)
+            print(person_point_array)
 
 
+    xc, yc, r, sigma = taubinSVD(point_coordinates)
+
+    cf.plot_data_circle(point_coordinates, xc, yc, r)
+            
     return None
-
-def circle_from_3_points(z1:complex, z2:complex, z3:complex) -> tuple[complex, float]:
-    if (z1 == z2) or (z2 == z3) or (z3 == z1):
-        raise ValueError(f"Duplicate points: {z1}, {z2}, {z3}")
-        
-    w = (z3 - z1)/(z2 - z1)
-    
-    # You should change 0 to a small tolerance for floating point comparisons
-    if abs(w.imag) <= 0:
-        raise ValueError(f"Points are collinear: {z1}, {z2}, {z3}")
-        
-    c = (z2 - z1)*(w - abs(w)**2)/(2j*w.imag) + z1  # Simplified denominator
-    r = abs(z1 - c)
-    
-    return c, r
-
 
 
 def handle_leggies(msg):
@@ -100,7 +99,8 @@ def handle_leggies(msg):
         if abs(is_line(msg.people))<1.1:
             print("people in a line")
         else:
-            print("people not in a line")
+            is_circle(msg.people)
+            print("people in a circle")
 
 
 
