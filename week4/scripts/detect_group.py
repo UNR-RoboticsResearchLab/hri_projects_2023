@@ -81,8 +81,18 @@ def create_transform(x,y):
 
     return goal_t
 
-def detect_group():
-    rospy.init_node('detect_goal', anonymous=True)
+def detect_group(tf_buffer):
+    curr = 0
+    ok = 1
+    people = []
+    while ok:
+        try:
+            people.append(get_transform("person"+str(curr), tf_buffer))
+        except tf_error: #fix this
+            ok = 0
+
+def main():
+    rospy.init_node('detect_group', anonymous=True)
 
     tf_buffer = tf2_ros.Buffer()
     listener = tf2_ros.TransformListener(tf_buffer)
@@ -96,15 +106,15 @@ def detect_group():
     person1 = get_transform('person1',tf_buffer)
     person2 = get_transform('person2',tf_buffer)
 
-    if(detect_line(person0,person1,person2)):
+    # if(detect_line(person0,person1,person2)):
 
-    elif(detect_circle(person0,person1,person2)):
-        print("here2")
-    else:
-        print("here3")
-        goal = create_transform(0,0)
+    # elif(detect_circle(person0,person1,person2)):
+    #     print("here2")
+    # else:
+    #     print("here3")
+    #     goal = create_transform(0,0)
 
-    goal = to_odom(goal,tf_buffer)
+    # goal = to_odom(goal,tf_buffer)
 
     while not rospy.is_shutdown():
         goal.header.stamp = rospy.Time.now()
@@ -115,6 +125,6 @@ def detect_group():
 # if __name__ == '__main__':
 if __name__ == '__main__':
     try:
-        detect_group()
+        main()
     except rospy.ROSInterruptException:
         pass
