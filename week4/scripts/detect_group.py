@@ -4,9 +4,10 @@ import rospy
 import numpy as np
 from people_msgs.msg import PositionMeasurementArray
 from tf.transformations import quaternion_from_euler
+from geometry_msgs.msg import Pose, Quaternion, TransformStamped
 import numpy as np
 from tf2_ros import TransformBroadcaster
-from week4.msg import Person
+from week4.msg import Person, Group, GroupArray
 
 global people
 
@@ -40,10 +41,10 @@ def get_line_eq(a,b):
     
     return m,s
 
-def detect_line(groups):
-    a = groups[0]
-    b = groups[1]
-    c = groups[2]
+def detect_line(group):
+    a = group[0]
+    b = group[1]
+    c = group[2]
 
     m,s = get_line_eq(a,b)
     c_predic = m*c[0] + s
@@ -60,31 +61,83 @@ def get_group_type(group):
         return 'circle'
 
 def create_msg(groups):
-    curr = 0
-    people = []
+    curr_g = 0
+    group_msg_arr = GroupArray()
     for group in groups:
-        type = get_group_type(group)
-        curr += 1
+        people = []
+        g_type = get_group_type(group)
+        curr_p=0
+        for person in group:
+            id = g_type + '_'+str(curr_g) + '_person_' + str(curr_p)
+            people.append(Person(id=id, x=person[0],y=person[1],z=person[2]))
+            curr_p += 1
+        g = Group()
+        g.people=people
+        g.size=len(people)
+        g.type=g_type
+        g.id = g_type + '_' + str(curr_g)
+        g.center=get_group_center(people,g.size)
+        g.header.stamp = rospy.Time().now()
+        g.header.frame_id = 'robot_0/odom'
+        group_msg_arr.groups.append(g)
+        curr_g += 1
 
+    return group_msg_arr
 
+def get_group_center(group, size):
+    x = 0
+    y = 0
+    z = 0
+    for person in group:
+        x += person.x
+        y += person.y
+        z += person.z
+    x = x/size
+    y = y/size
+    z = z/size
 
-    return groups
+    p = Pose()
+    p.position.x = x
+    p.position.y = y
+    p.position.z = z
+
+    p.orientation = Quaternion(x=0,y=0,z=0,w=1)
+
+    return p
+
+def get_transform(group):
+    tf = TransformStamped()
+    tf.header.frame_id = group.header.frame_id
+    tf.header.stamp = rospy.Time().now()
+    tf.transform.rotation = group.center.orientation
+    tf.transform.translation.x = group.center.position.x
+    tf.transform.translation.y = group.center.position.y
+    tf.transform.translation.z = group.center.position.z
+    tf.child_frame_id = group.id + '_center'
+
+    return tf
+
 
 def talker():
     rospy.init_node('group_detector', anonymous=True)
     rospy.Subscriber('/people_tracker_measurements', PositionMeasurementArray, callback)
+    pub=rospy.Publisher('/robot_0/detected_groups', GroupArray, queue_size=10)
     br = TransformBroadcaster()
     rate = rospy.Rate(1)
 
     global people
 
+    rospy.wait_for_message('/people_tracker_measurements', PositionMeasurementArray)
+
     while not rospy.is_shutdown():
         try:
             groups = detect_group(people)
-            groups = get_group_type(groups)
-            print(groups)
-            print('\n\n')
-
+            group_msg_arr = create_msg(groups)
+            for group in group_msg_arr.groups:
+                center_tf = get_transform(group)
+                br.sendTransform(center_tf)
+            pub.publish(group_msg_arr)
+            
         except NameError:
             continue
         rate.sleep()
