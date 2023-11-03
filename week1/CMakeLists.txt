@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   stage_ros
   std_msgs
-  week0
 )
 
 ## System dependencies are found with CMake's conventions
@@ -107,7 +106,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES week1
-#  CATKIN_DEPENDS geometry_msgs rospy stage_ros std_msgs week0
+ CATKIN_DEPENDS geometry_msgs rospy stage_ros std_msgs
 #  DEPENDS system_lib
 )
 
