@@ -30,7 +30,7 @@ roslaunch nao_description robot_state_publisher.launch
 - Finally in a third terminal, let's run a gui publisher:
 
 ```
-rosrun roslaunch joint_state_publisher_gui joint_state_publisher_gui
+rosrun joint_state_publisher_gui joint_state_publisher_gui
 ```
 
 This will load up a gui that can move each joint individually. If you want to see what the gui is publishing, you can use rostopic echo to see:
