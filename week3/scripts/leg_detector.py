@@ -28,7 +28,7 @@ goal=Point()
 
 def is_line(person_array):
 
-    print(len(person_array))
+    #print(len(person_array))
 
     det_arr = np.zeros(shape=(len(person_array),3))
     
@@ -36,14 +36,14 @@ def is_line(person_array):
     for i in range(len(person_array)):
         det_person_array = np.array([1, person_array[i].pos.x, person_array[i].pos.y])
         det_arr[i] = det_person_array
-        print(det_arr)
+        #print(det_arr)
 
     det = np.linalg.det(det_arr)
 
-    print(det_arr)
+    #print(det_arr)
 
     #if collinear
-    print(det)
+    print("Line Determinant: " + str(det))
 
     return det
 
@@ -58,12 +58,12 @@ def is_circle(person_array):
         for i in range(len(person_array)):
             person_point_array = [person_array[i].pos.x, person_array[i].pos.y]
             point_coordinates.append(person_point_array)
-            print(person_point_array)
+            #print(person_point_array)
 
 
-    #xc, yc, r, sigma = taubinSVD(point_coordinates)
+    xc, yc, r, sigma = taubinSVD(point_coordinates)
             
-    return None
+    return xc
 
 
 def handle_leggies(msg):
@@ -76,11 +76,24 @@ def handle_leggies(msg):
     t.child_frame_id = "legs"
 
     if len(msg.people) == 0:
-        print("no leggies")
+        print("No Legs Detected")
         return None
 
     if len(msg.people) > 0:
-        print(len(msg.people))
+        print("Total Number of People: "+ str(len(msg.people)))
+
+        if abs(is_line(msg.people))<1.1:
+            for i in range(len(msg.people)):
+                msg.people[i].name = "line_1_" + msg.people[i].name
+                print(msg.people[i].name)
+            print("People in a line")
+        else:
+            for i in range(len(msg.people)):
+                msg.people[i].name = "circle_1_" + msg.people[i].name
+                print(msg.people[i].name)
+            print(is_circle(msg.people))
+            print("People in a circle")
+
 
         for i in range(len(msg.people)):
             t.transform.translation.x = msg.people[i].pos.x
@@ -92,16 +105,8 @@ def handle_leggies(msg):
             t.transform.rotation.z = q[2]
             t.transform.rotation.w = q[3]
 
-            print(f"person_{i} :" + str(t.transform))
+            #print(f"person_{i} :" + str(t.transform))
         
-        if abs(is_line(msg.people))<1.1:
-            print("people in a line")
-        else:
-            is_circle(msg.people)
-            print("people in a circle")
-
-
-
     br.sendTransform(t)
 
 
