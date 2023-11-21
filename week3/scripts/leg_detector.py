@@ -1,30 +1,62 @@
 #!/usr/bin/env python3
 
 import tf_conversions
-
 import tf2_ros
-
 import rospy
 import math
 import numpy as np
 import circle_fit as cf
-
-
 import geometry_msgs.msg
+import copy
+
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Point, Twist
 from people_msgs.msg import PositionMeasurementArray
+from visualization_msgs.msg import *
+from week3.msg import group
 from math import atan2
 from circle_fit import taubinSVD
 
 
 msg_twist=Twist()
+msg_group=group()
+msg_viz = Marker()
 linearx=0
 angularz=0
 
 goal=Point()
+
+def line_marker(size):
+    global msg_viz
+
+    msg_viz.header.frame_id = "/viz_frame"
+    msg_viz.header.stamp = rospy.get_time()
+    msg_viz.ns = "box_marker"
+    msg_viz.id = 0
+
+    msg_viz.type = Marker.CUBE
+    msg_viz.action = Marker.ADD
+
+    msg_viz.pose.position.x = 0
+    msg_viz.pose.position.y = 0
+    msg_viz.pose.position.z = 0
+    msg_viz.pose.orientation.x = 0.0
+    msg_viz.pose.orientation.y = 0.0
+    msg_viz.pose.orientation.z = 0.0
+    msg_viz.pose.orientation.w = 1.0
+
+    msg_viz.scale.x = size
+    msg_viz.scale.y = size
+    msg_viz.scale.z = size
+
+    msg_viz.color.r = 0.0
+    msg_viz.color.g = 1.0
+    msg_viz.color.b = 0.0
+    msg_viz.color.a = 1.0
+
+    return None
 
 def is_line(person_array):
 
@@ -67,7 +99,7 @@ def is_circle(person_array):
 
 
 def handle_leggies(msg):
-    global msg_twist, goal
+    global msg_twist, goal, msg_group
     br = tf2_ros.TransformBroadcaster()
     t = geometry_msgs.msg.TransformStamped()
 
@@ -116,6 +148,7 @@ def listener():
     rospy.init_node("legs")
     rospy.Subscriber('/people_tracker_measurements', PositionMeasurementArray, handle_leggies)
     pub = rospy.Publisher("/robot_0/detected_groups", PositionMeasurementArray, queue_size=10)
+    marker_pub = rospy.Publisher("/marker_pub", Marker, queue_size=10)
     
     rospy.spin()
 

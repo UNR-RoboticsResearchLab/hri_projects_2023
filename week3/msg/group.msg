@@ -1,0 +1,15 @@
+std_msgs/Header header
+  time stamp
+people_msgs/Person[] people
+  string name
+  geometry_msgs/Point position
+    float64 x
+    float64 y
+    float64 z
+  geometry_msgs/Point velocity
+    float64 x
+    float64 y
+    float64 z
+  float64 size
+geometry_msgs/Pose pose 
+    Point position
