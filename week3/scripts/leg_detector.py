@@ -15,13 +15,13 @@ from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Point, Twist
 from people_msgs.msg import PositionMeasurementArray
 from visualization_msgs.msg import *
-from week3.msg import group
+from week3.msg import Group
 from math import atan2
 from circle_fit import taubinSVD
 
 
 msg_twist=Twist()
-msg_group=group()
+msg_group=Group()
 msg_viz = Marker()
 linearx=0
 angularz=0
@@ -31,9 +31,9 @@ goal=Point()
 def line_marker(size):
     global msg_viz
 
-    msg_viz.header.frame_id = "/viz_frame"
-    msg_viz.header.stamp = rospy.get_time()
-    msg_viz.ns = "box_marker"
+    msg_viz.header.frame_id = "robot_0/base_link"
+    
+    msg_viz.ns = "MARKER_VIZ"
     msg_viz.id = 0
 
     msg_viz.type = Marker.CUBE
@@ -56,7 +56,14 @@ def line_marker(size):
     msg_viz.color.b = 0.0
     msg_viz.color.a = 1.0
 
-    return None
+    msg_viz.lifetime = 0
+
+    msg_viz.frame_locked = True
+
+    print(msg_viz)
+
+
+    return msg_viz
 
 def is_line(person_array):
 
@@ -138,6 +145,9 @@ def handle_leggies(msg):
             t.transform.rotation.w = q[3]
 
             #print(f"person_{i} :" + str(t.transform))
+
+
+    
         
     br.sendTransform(t)
 
@@ -146,9 +156,10 @@ def handle_leggies(msg):
 def listener():
 
     rospy.init_node("legs")
+    marker_pub = rospy.Publisher("/marker_pub", Marker, queue_size=10)
     rospy.Subscriber('/people_tracker_measurements', PositionMeasurementArray, handle_leggies)
     pub = rospy.Publisher("/robot_0/detected_groups", PositionMeasurementArray, queue_size=10)
-    marker_pub = rospy.Publisher("/marker_pub", Marker, queue_size=10)
+    
     
     rospy.spin()
 
