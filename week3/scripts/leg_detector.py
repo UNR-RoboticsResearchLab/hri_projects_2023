@@ -33,7 +33,7 @@ goal=Point()
 def line_marker(size, midpoint):
     global msg_viz
 
-    msg_viz.header.frame_id = "robot_0/base_link"
+    msg_viz.header.frame_id = "robot_0/odom"
     
     msg_viz.ns = "MARKER_VIZ"
     msg_viz.id = 0
