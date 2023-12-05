@@ -64,6 +64,46 @@ def line_marker(size, midpoint):
 
     return msg_viz
 
+def circle_marker(size, midpoint):
+    global msg_viz
+
+    msg_viz.header.frame_id = "robot_0/odom"
+    
+    msg_viz.ns = "MARKER_VIZ"
+    msg_viz.id = 0
+
+    msg_viz.type = Marker.CYLINDER
+    msg_viz.action = Marker.ADD
+
+    msg_viz.pose.position.x = midpoint[0]
+    msg_viz.pose.position.y = midpoint[1]
+    msg_viz.pose.position.z = 0
+    msg_viz.pose.orientation.x = 0.0
+    msg_viz.pose.orientation.y = 0.0
+    msg_viz.pose.orientation.z = 0.0
+    msg_viz.pose.orientation.w = 1.0
+
+    msg_viz.scale.x = size
+    msg_viz.scale.y = 0.5
+    msg_viz.scale.z = 0.5
+
+    msg_viz.color.r = 0.0
+    msg_viz.color.g = 1.0
+    msg_viz.color.b = 0.0
+    msg_viz.color.a = 1.0
+
+    msg_viz.lifetime = rospy.Time(1)
+
+    msg_viz.frame_locked = True
+
+    return msg_viz
+
+def findRadius(p1, p2):
+
+    rad = sqrt(((p2[0] - p1[0])*(p2[0] - p1[0]))+((p2[1] - p1[1])*(p2[1] - p1[1])))
+
+    return rad
+
 def is_line(person_array):
 
     #print(len(person_array))
@@ -128,7 +168,7 @@ def is_circle(person_array):
 
     xc, yc, r, sigma = taubinSVD(point_coordinates)
             
-    return xc
+    return xc, r
 
 
 def handle_leggies(msg):
@@ -164,6 +204,9 @@ def handle_leggies(msg):
             for i in range(len(msg.people)):
                 msg.people[i].name = "circle_1_" + msg.people[i].name
                 print(msg.people[i].name)
+
+            c , r = is_circle(msg.people)
+            msg.viz = circle_marker(r, c)
             print(is_circle(msg.people))
             print("People in a circle\n----")
 
