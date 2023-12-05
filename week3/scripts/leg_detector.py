@@ -42,9 +42,7 @@ def line_marker(size, midpoint):
     msg_viz.action = Marker.ADD
 
     msg_viz.pose.position.x = midpoint[0]
-    print(msg_viz.pose.position.x)
     msg_viz.pose.position.y = midpoint[1]
-    print(msg_viz.pose.position.y)
     msg_viz.pose.position.z = 0
     msg_viz.pose.orientation.x = 0.0
     msg_viz.pose.orientation.y = 0.0
@@ -52,15 +50,15 @@ def line_marker(size, midpoint):
     msg_viz.pose.orientation.w = 1.0
 
     msg_viz.scale.x = size
-    msg_viz.scale.y = 1.0
-    msg_viz.scale.z = 1.0
+    msg_viz.scale.y = 0.5
+    msg_viz.scale.z = 0.5
 
     msg_viz.color.r = 0.0
     msg_viz.color.g = 1.0
     msg_viz.color.b = 0.0
     msg_viz.color.a = 1.0
 
-    msg_viz.lifetime = rospy.Duration()
+    msg_viz.lifetime = rospy.Time(1)
 
     msg_viz.frame_locked = True
 
