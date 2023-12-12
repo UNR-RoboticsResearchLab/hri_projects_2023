@@ -23,14 +23,80 @@ from scipy.spatial import distance
 
 
 msg_group=Group()
+msg_viz = Marker()
 linearx=0
 angularz=0
-theta = 0.0
-x=0.0
-y=0.0
+marker_pub = rospy.Publisher("/visualization_marker", Marker, queue_size=10)
 
 goal=Point()
-speed=Twist()
+
+def line_marker(size, midpoint):
+    global msg_viz
+
+    msg_viz.header.frame_id = "robot_0/odom"
+    
+    msg_viz.ns = "MARKER_VIZ"
+    msg_viz.id = 0
+
+    msg_viz.type = Marker.CUBE
+    msg_viz.action = Marker.ADD
+
+    msg_viz.pose.position.x = midpoint[0]
+    msg_viz.pose.position.y = midpoint[1]
+    msg_viz.pose.position.z = 0
+    msg_viz.pose.orientation.x = 0.0
+    msg_viz.pose.orientation.y = 0.0
+    msg_viz.pose.orientation.z = 0.0
+    msg_viz.pose.orientation.w = 1.0
+
+    msg_viz.scale.x = size
+    msg_viz.scale.y = 0.5
+    msg_viz.scale.z = 0.5
+
+    msg_viz.color.r = 0.0
+    msg_viz.color.g = 1.0
+    msg_viz.color.b = 0.0
+    msg_viz.color.a = 1.0
+
+    msg_viz.lifetime = rospy.Time(1)
+
+    msg_viz.frame_locked = True
+
+    return msg_viz
+
+def circle_marker(size, midpoint):
+    global msg_viz
+
+    msg_viz.header.frame_id = "robot_0/odom"
+    
+    msg_viz.ns = "MARKER_VIZ"
+    msg_viz.id = 0
+
+    msg_viz.type = Marker.CYLINDER
+    msg_viz.action = Marker.ADD
+
+    msg_viz.pose.position.x = midpoint[0]
+    msg_viz.pose.position.y = midpoint[1]
+    msg_viz.pose.position.z = 0
+    msg_viz.pose.orientation.x = 0.0
+    msg_viz.pose.orientation.y = 0.0
+    msg_viz.pose.orientation.z = 0.0
+    msg_viz.pose.orientation.w = 1.0
+
+    msg_viz.scale.x = size
+    msg_viz.scale.y = 0.5
+    msg_viz.scale.z = 0.5
+
+    msg_viz.color.r = 0.0
+    msg_viz.color.g = 1.0
+    msg_viz.color.b = 0.0
+    msg_viz.color.a = 1.0
+
+    msg_viz.lifetime = rospy.Time(1)
+
+    msg_viz.frame_locked = True
+
+    return msg_viz
 
 def findRadius(p1, p2):
 
@@ -104,83 +170,9 @@ def is_circle(person_array):
             
     return xc, r
 
-def avoid_follow(dat):
-    global case
-
-    range={
-        "right" : min(min(dat.ranges[0:239]) , 2),
-        "center" : min(min(dat.ranges[240:479]) , 2),
-        "left" : min(min(dat.ranges[480:719]) , 2)
-    }
-
-    if ( range["right"] >1  and range["center"] > 1 and range["left"] >1):
-        case='free'
-        return "front free"
-    elif ( range["right"] > 1  and range["center"] < 1 and range["left"] > 1 ):
-        case='front'
-        return "front wall"
-    elif ( range["right"] < 1  and range["center"] > 1 and range["left"] > 1 ):
-        case='right'
-        return "right wall"
-    elif ( range["right"] > 1  and range["center"] > 1 and range["left"] < 1 ):
-        case='left'
-        return "left wall"
-
-def move_to_goal():
-    global speed, theta,x,y
-    inc_x = goal.x -x
-    inc_y = goal.y -y
-    opt_theta = 0
-
-    angle_to_goal = atan2(inc_y, inc_x)
-
-    alpha = angle_to_goal - theta
-    beta = angle_to_goal - theta +2*math.pi
-    gamma = angle_to_goal - theta -2*math.pi
-
-    if(abs(alpha) < abs(beta) and abs(alpha) < abs(gamma)):
-        opt_theta = alpha
-    elif(abs(beta) < abs(alpha) and abs(beta) < abs(gamma)):
-        opt_theta = beta
-    else:
-        opt_theta = gamma
-
-    if abs(angle_to_goal-theta)>0.1:
-        while (abs(angle_to_goal - theta) > .1):
-            speed.linear.x = 0
-            speed.angular.z = opt_theta
-            pub.publish(speed)
-            rospy.sleep(0.1)
-    else:
-        if case=='free':
-            speed.linear.x = 0.5
-            speed.angular.z = 0.0
-        elif case=='front':
-            speed.linear.x = 0.0
-            speed.angular.z = 0.3
-        elif case=='right':
-            speed.linear.x = 0.0
-            speed.angular.z = 0.3
-        elif case=='left':
-            speed.linear.x = 0.0
-            speed.angular.z = 0.3
-
-        pub.publish(speed)
-
-def newOdom(msg):
-    global x
-    global y
-    global theta
-
-    x = msg.pose.pose.position.x
-    y = msg.pose.pose.position.y
-
-    rot_q = msg.pose.pose.orientation
-    (roll, pitch, theta) = euler_from_quaternion([rot_q.x, rot_q.y, rot_q.z, rot_q.w])
-
 
 def handle_leggies(msg):
-    global goal, msg_group
+    global goal, msg_group, msg_viz, marker_pub
     br = tf2_ros.TransformBroadcaster()
     t = geometry_msgs.msg.TransformStamped()
 
@@ -203,6 +195,9 @@ def handle_leggies(msg):
             for i in range(len(msg.people)):
                 msg.people[i].name = "line_1_" + msg.people[i].name
                 print(msg.people[i].name)
+            msg_viz = line_marker(longest_distance_in_line(msg.people)[0], longest_distance_in_line(msg.people)[1])
+            msg_viz.header.stamp = rospy.Time.now()
+            marker_pub.publish(msg_viz)
 
             print("People in a line\n----")
         else:
@@ -211,6 +206,7 @@ def handle_leggies(msg):
                 print(msg.people[i].name)
 
             c , r = is_circle(msg.people)
+            msg.viz = circle_marker(r, c)
             print(is_circle(msg.people))
             print("People in a circle\n----")
 
