@@ -21,19 +21,19 @@ def callback(data):
     }
 
     if ( range["right"] >1  and range["center"] > 1 and range["left"] >1):
-        case = 'weeeeeeee!'
+        case = 'free'
         linearx=0.6
         angularz=0
     elif ( range["right"] > 1  and range["center"] < 1 and range["left"] > 1 ):
-        case = 'something do be in front of me!'
+        case = 'front obstacle'
         linearx=0
         angularz=-0.5
     elif ( range["right"] < 1  and range["center"] > 1 and range["left"] > 1 ):
-        case = 'to the right!'
+        case = 'right obstacle'
         linearx=0
         angularz=0.5
     elif ( range["right"] > 1  and range["center"] > 1 and range["left"] < 1 ):
-        case = 'to the left!'
+        case = 'left obstacle'
         linearx=0
         angularz=-0.5
     
@@ -49,19 +49,11 @@ def callback(data):
 
 def listener():
 
-    # In ROS, nodes are uniquely named. If two nodes with the same
-    # name are launched, the previous one is kicked off. The
-    # anonymous=True flag means that rospy will choose a unique
-    # name for our 'listener' node so that multiple listeners can
-    # run simultaneously.
-
-
     global pub
     rospy.init_node('obstacle_avoid', anonymous=False)
     pub = rospy.Publisher("/cmd_vel" , Twist , queue_size=1)
     sub = rospy.Subscriber('/base_scan', LaserScan, callback)
 
-    # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
 
 if __name__ == '__main__':

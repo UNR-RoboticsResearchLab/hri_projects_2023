@@ -61,9 +61,7 @@ def is_circle(person_array):
             print(person_point_array)
 
 
-    xc, yc, r, sigma = taubinSVD(point_coordinates)
-
-    cf.plot_data_circle(point_coordinates, xc, yc, r)
+    #xc, yc, r, sigma = taubinSVD(point_coordinates)
             
     return None
 
@@ -113,7 +111,6 @@ def listener():
     rospy.init_node("legs")
     rospy.Subscriber('/people_tracker_measurements', PositionMeasurementArray, handle_leggies)
     pub = rospy.Publisher("/robot_0/detected_groups", PositionMeasurementArray, queue_size=10)
-    
     
     rospy.spin()
 
