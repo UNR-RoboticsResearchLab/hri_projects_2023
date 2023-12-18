@@ -18,6 +18,7 @@ from people_msgs.msg import PositionMeasurementArray
 from visualization_msgs.msg import *
 from week3.msg import Group
 from math import atan2
+from math import sqrt
 from circle_fit import taubinSVD
 from scipy.spatial import distance
 
@@ -31,6 +32,9 @@ y=0.0
 
 goal=Point()
 speed=Twist()
+
+move_pub = rospy.Publisher("/cmd_vel", Twist, queue_size = 1)
+case=''
 
 def findRadius(p1, p2):
 
@@ -102,7 +106,7 @@ def is_circle(person_array):
 
     xc, yc, r, sigma = taubinSVD(point_coordinates)
             
-    return xc, r
+    return xc, yc
 
 def avoid_follow(dat):
     global case
@@ -115,16 +119,16 @@ def avoid_follow(dat):
 
     if ( range["right"] >1  and range["center"] > 1 and range["left"] >1):
         case='free'
-        return "front free"
+        return case
     elif ( range["right"] > 1  and range["center"] < 1 and range["left"] > 1 ):
         case='front'
-        return "front wall"
+        return case
     elif ( range["right"] < 1  and range["center"] > 1 and range["left"] > 1 ):
         case='right'
-        return "right wall"
+        return case
     elif ( range["right"] > 1  and range["center"] > 1 and range["left"] < 1 ):
         case='left'
-        return "left wall"
+        return case
 
 def move_to_goal():
     global speed, theta,x,y
@@ -149,7 +153,7 @@ def move_to_goal():
         while (abs(angle_to_goal - theta) > .1):
             speed.linear.x = 0
             speed.angular.z = opt_theta
-            pub.publish(speed)
+            move_pub.publish(speed)
             rospy.sleep(0.1)
     else:
         if case=='free':
@@ -165,7 +169,7 @@ def move_to_goal():
             speed.linear.x = 0.0
             speed.angular.z = 0.3
 
-        pub.publish(speed)
+        move_pub.publish(speed)
 
 def newOdom(msg):
     global x
@@ -203,6 +207,10 @@ def handle_leggies(msg):
             for i in range(len(msg.people)):
                 msg.people[i].name = "line_1_" + msg.people[i].name
                 print(msg.people[i].name)
+            
+            goal.x = msg.people[0].pos.x - 2.0
+            goal.y = msg.people[0].pos.y
+            move_to_goal()
 
             print("People in a line\n----")
         else:
@@ -211,6 +219,10 @@ def handle_leggies(msg):
                 print(msg.people[i].name)
 
             c , r = is_circle(msg.people)
+            goal.x = c
+            goal.y = r
+            move_to_goal()
+
             print(is_circle(msg.people))
             print("People in a circle\n----")
 
@@ -236,6 +248,9 @@ def handle_leggies(msg):
 if __name__ == '__main__':
     rospy.init_node("legs")
 
+
+    rospy.Subscriber("/odom", Odometry, newOdom)
+    rospy.Subscriber('/base_scan', LaserScan, avoid_follow)
     rospy.Subscriber('/people_tracker_measurements', PositionMeasurementArray, handle_leggies)
     pub = rospy.Publisher("/robot_0/detected_groups", PositionMeasurementArray, queue_size=10)
 
