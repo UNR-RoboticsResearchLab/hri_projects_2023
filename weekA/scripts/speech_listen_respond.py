@@ -2,22 +2,17 @@
 # license removed for brevity
 
 import rospy
-import ros_vosk
 
 from std_msgs.msg import String
 
 message = ""
 
-count = 0
-
-yes_response = False
 
 pub = rospy.Publisher('tts/phrase', String, queue_size=10)
 
 def listen(msg):
     global message
     print("Listened to:" + msg.data)
-
     message=msg.data
 
 
