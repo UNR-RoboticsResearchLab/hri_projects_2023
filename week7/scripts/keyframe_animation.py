@@ -37,7 +37,7 @@ def input_keys():
             print("insert play code here")
 
         if(keyframe_in=="q"):
-            break
+            return
 
 
 def joint_state_callback(msg):
