@@ -49,6 +49,7 @@ def callback(data):
 
 def listener():
 
+    #assignment1
     global pub
     rospy.init_node('obstacle_avoid', anonymous=False)
     pub = rospy.Publisher("/cmd_vel" , Twist , queue_size=1)
