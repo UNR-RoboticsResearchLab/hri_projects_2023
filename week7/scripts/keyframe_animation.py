@@ -22,6 +22,8 @@ def input_keys():
         
         if(keyframe_in=="s"):
             keyframe_goals.append(current_state)
+
+            print(keyframe_goals)
             rospy.loginfo("joint state saved")
 
         if(keyframe_in=="g"):
