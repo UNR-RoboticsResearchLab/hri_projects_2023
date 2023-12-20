@@ -34,7 +34,7 @@ def input_keys():
                 pub.publish(state)
                 rospy.sleep(0.01)
 
-            print("insert play code here")
+            print("playing animation...")
 
         if(keyframe_in=="q"):
             return
@@ -55,14 +55,9 @@ def interpolate(p1, p2):
 
             slope_arr.append((p2.position[i]-p1.position[i])/100)
 
-    print(slope_arr)
-
     return slope_arr
-            #append middle man with appropriate index 
 
 def add(a, b):
-    print("A: "+ str(a))
-    print(b)
     return a + b
 
 def interpolate_list():
@@ -73,8 +68,6 @@ def interpolate_list():
     for i in range(len(keyframe_goals)-1):
 
         slope_arr_arr.append(interpolate(keyframe_goals[i], keyframe_goals[i+1]))
-
-    print(slope_arr_arr)
 
     keyframe_points.append(keyframe_goals[0])
 
@@ -97,7 +90,6 @@ def init():
     init_joint_state = JointState()
     init_joint_state.header.stamp = rospy.Time.now()
     init_joint_state.header.frame_id = ""
-    #init_joint_state.name = ["RShoulderPitch", "RShoulderRoll", "RElbowYaw", "RElbowRoll", "RWristYaw", "RHand", "LShoulderPitch", "LShoulderRoll", "LElbowYaw", "LElbowRoll", "LWristYaw", "LHand"]
     init_joint_state.name = ["HeadYaw","HeadPitch","LHipYawPitch","LHipRoll","LHipPitch","LKneePitch","LAnklePitch","LAnkleRoll","RHipYawPitch",
                              "RHipRoll","RHipPitch","RKneePitch","RAnklePitch","RAnkleRoll","LShoulderPitch","LShoulderRoll","LElbowYaw","LElbowRoll","LWristYaw","LHand","RShoulderPitch","RShoulderRoll","RElbowYaw","RElbowRoll","RWristYaw","RHand","RFinger23","RFinger13","RFinger12","LFinger21","LFinger13","LFinger11","RFinger22","LFinger22","RFinger21","LFinger12","RFinger11","LFinger23","LThumb1","RThumb1","RThumb2","LThumb2"]
     

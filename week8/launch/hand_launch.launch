@@ -1,0 +1,8 @@
+<launch>
+    <rosparam param='source_list'>['animation']</rosparam>
+
+    <!--<node pkg='week7' type='animation.py' name='animation'></node>
+    <node pkg='week8' type='look_at_hand.py' name='look_at_hand'></node>-->
+
+    <node pkg='joint_state_publisher_gui' type='joint_state_publisher_gui' name='my_jsp'></node>
+</launch>
